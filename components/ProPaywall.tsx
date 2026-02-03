@@ -1,20 +1,14 @@
 
-import React, { useState } from 'react';
-import { CheckCircle2, Loader2, ShieldCheck, Zap, BarChart3, Star } from 'lucide-react';
+import React from 'react';
+import { CheckCircle2, ShieldCheck, Zap, BarChart3, Star } from 'lucide-react';
 
 interface ProPaywallProps {
   onSubscribe: () => void;
 }
 
 const ProPaywall: React.FC<ProPaywallProps> = ({ onSubscribe }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleSubscribe = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      onSubscribe();
-    }, 2000);
+    onSubscribe();
   };
 
   return (
@@ -32,21 +26,37 @@ const ProPaywall: React.FC<ProPaywallProps> = ({ onSubscribe }) => {
 
         {/* Pricing Card */}
         <div className="bg-white rounded-[2.5rem] border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] p-8 text-left space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-slate-900 text-white px-4 py-2 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest">
-            OFFRE PRO
+          <div className="absolute top-0 right-0 bg-orange-500 text-white px-4 py-2 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest animate-pulse">
+            OFFRE DE LANCEMENT
           </div>
-          
-          <div className="space-y-1">
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Abonnement Entreprise</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-slate-900">9,99 €</span>
-              <span className="text-slate-500 font-bold">/ mois HT</span>
+
+          {/* Bannière 1er mois offert */}
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-center py-3 px-4 rounded-2xl -mx-2 shadow-lg">
+            <p className="text-lg font-black uppercase tracking-wide">1ER MOIS OFFERT - SANS ENGAGEMENT</p>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Abonnement PRO</h3>
+
+            <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+              <div className="flex items-center gap-4 justify-center">
+                <div className="text-center">
+                  <span className="text-3xl font-black text-green-600">0 €</span>
+                  <p className="text-[10px] font-bold text-green-600 uppercase">1er mois</p>
+                </div>
+                <span className="text-xl text-slate-300">→</span>
+                <div className="text-center">
+                  <span className="text-3xl font-black text-orange-600">29,90 €</span>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">HT / mois</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-500 font-bold mt-2 text-center">Résiliez à tout moment pendant le mois gratuit.</p>
             </div>
-            <p className="text-xs font-bold text-orange-600 uppercase tracking-tighter">Sans engagement. 1er mois offert.</p>
           </div>
 
           <div className="space-y-4 pt-4 border-t border-slate-100">
             {[
+              { icon: <Zap size={18} />, text: "Réservations illimitées incluses" },
               { icon: <Zap size={18} />, text: "Dépôt d'annonces illimité" },
               { icon: <ShieldCheck size={18} />, text: "Certificats de traçabilité déchets" },
               { icon: <BarChart3 size={18} />, text: "Tableau de bord de stats RSE" },
@@ -61,19 +71,11 @@ const ProPaywall: React.FC<ProPaywallProps> = ({ onSubscribe }) => {
             ))}
           </div>
 
-          <button 
-            disabled={isLoading}
+          <button
             onClick={handleSubscribe}
-            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-3"
+            className="w-full py-5 bg-orange-600 text-white rounded-2xl font-black text-lg hover:bg-orange-700 transition-all active:scale-[0.98] shadow-lg"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                <span>ACTIVATION DU COMPTE...</span>
-              </>
-            ) : (
-              'DÉMARRER MON ESSAI GRATUIT'
-            )}
+            S'ABONNER
           </button>
         </div>
 
