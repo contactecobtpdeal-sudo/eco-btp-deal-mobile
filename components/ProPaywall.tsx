@@ -1,13 +1,35 @@
 
-import React from 'react';
-import { CheckCircle2, ShieldCheck, Zap, BarChart3, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, ShieldCheck, Zap, BarChart3, Star, Loader2, CreditCard, Lock } from 'lucide-react';
+import { openClubEcoBTPCheckout } from '../lib/stripe-handler';
 
 interface ProPaywallProps {
   onSubscribe: () => void;
 }
 
 const ProPaywall: React.FC<ProPaywallProps> = ({ onSubscribe }) => {
-  const handleSubscribe = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+
+  const handleStripeCheckout = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Ouvrir Stripe Checkout avec période d'essai de 30 jours
+      await openClubEcoBTPCheckout(email || undefined);
+      // Note: Si tout se passe bien, l'utilisateur est redirigé vers Stripe
+      // Cette ligne ne sera atteinte que si la redirection échoue
+    } catch (err: any) {
+      console.error('Erreur lors de l\'ouverture de Stripe:', err);
+      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.');
+      setIsLoading(false);
+    }
+  };
+
+  // Pour le mode démo, on permet aussi de continuer sans paiement
+  const handleDemoSubscribe = () => {
     onSubscribe();
   };
 
@@ -71,12 +93,69 @@ const ProPaywall: React.FC<ProPaywallProps> = ({ onSubscribe }) => {
             ))}
           </div>
 
+          {/* Champ email optionnel */}
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              Email professionnel (optionnel)
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="contact@votre-entreprise.fr"
+              className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:border-orange-400 focus:outline-none transition-colors"
+            />
+          </div>
+
+          {/* Message d'erreur */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium">
+              {error}
+            </div>
+          )}
+
+          {/* Bouton Stripe Checkout */}
           <button
-            onClick={handleSubscribe}
-            className="w-full py-5 bg-orange-600 text-white rounded-2xl font-black text-lg hover:bg-orange-700 transition-all active:scale-[0.98] shadow-lg"
+            onClick={handleStripeCheckout}
+            disabled={isLoading}
+            className="w-full py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl font-black text-lg hover:from-orange-600 hover:to-orange-700 transition-all active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
-            S'ABONNER
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                <span>REDIRECTION VERS STRIPE...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard size={24} />
+                <span>S'INSCRIRE - PAIEMENT SÉCURISÉ</span>
+              </>
+            )}
           </button>
+
+          {/* Bouton démo (pour tester sans Stripe) */}
+          <button
+            onClick={handleDemoSubscribe}
+            className="w-full py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+          >
+            Mode démo (sans paiement)
+          </button>
+
+          {/* Badge sécurité */}
+          <div className="flex items-center justify-center gap-2 text-slate-400">
+            <Lock size={14} />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Paiement sécurisé par Stripe</span>
+          </div>
+        </div>
+
+        {/* Cartes de test */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left">
+          <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Mode Test - Cartes de démonstration</p>
+          <div className="space-y-1 text-[11px] text-blue-700 font-mono">
+            <p><span className="font-bold">Succès :</span> 4242 4242 4242 4242</p>
+            <p><span className="font-bold">Refusée :</span> 4000 0000 0000 0002</p>
+            <p className="text-blue-500">Exp: 12/34 | CVC: 123</p>
+          </div>
         </div>
 
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-8">

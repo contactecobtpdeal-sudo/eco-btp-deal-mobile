@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Signature, Camera, ShieldCheck, Info, CheckCircle, ChevronRight, Download } from 'lucide-react';
 import { Material } from '../types';
 
@@ -12,8 +12,55 @@ interface PickupSlipProps {
 const PickupSlip: React.FC<PickupSlipProps> = ({ material, onClose, onSigned }) => {
   const [isSigned, setIsSigned] = useState(false);
   const [photoProof, setPhotoProof] = useState<string | null>(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawing = useRef(false);
 
-  const handleSignature = () => {
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoProof(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
+    isDrawing.current = true;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.nativeEvent.offsetX;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.nativeEvent.offsetY;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDrawing.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.nativeEvent.offsetX;
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.nativeEvent.offsetY;
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    isDrawing.current = false;
+  };
+
+  const confirmSignature = () => {
+    setShowSignaturePad(false);
     setIsSigned(true);
     setTimeout(() => {
       onSigned();
@@ -70,17 +117,21 @@ const PickupSlip: React.FC<PickupSlipProps> = ({ material, onClose, onSigned }) 
 
         {/* Actions */}
         <div className="space-y-4">
-          <button 
-            onClick={() => setPhotoProof('https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=400')}
-            className={`w-full py-5 rounded-2xl border-2 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${photoProof ? 'bg-green-50 border-green-500 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
-          >
+          <label className={`w-full py-5 rounded-2xl border-2 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all cursor-pointer ${photoProof ? 'bg-green-50 border-green-500 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
             {photoProof ? <CheckCircle size={18} /> : <Camera size={18} />}
             {photoProof ? 'PHOTO PREUVE ENREGISTRÉE' : 'PRENDRE UNE PHOTO DU LOT'}
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoCapture}
+              className="hidden"
+            />
+          </label>
 
           {!isSigned ? (
-            <button 
-              onClick={handleSignature}
+            <button
+              onClick={() => setShowSignaturePad(true)}
               className="w-full bg-orange-600 text-white py-6 rounded-[2rem] font-black text-sm shadow-2xl shadow-orange-100 uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 hover:bg-orange-700 transition-all border-b-4 border-orange-800"
             >
               SIGNATURE NUMÉRIQUE ✍️
@@ -91,6 +142,31 @@ const PickupSlip: React.FC<PickupSlipProps> = ({ material, onClose, onSigned }) 
             </div>
           )}
         </div>
+
+        {showSignaturePad && (
+          <div className="fixed inset-0 z-[500] bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-4 w-full max-w-sm">
+              <p className="text-center font-black text-sm uppercase mb-4">Signez avec votre doigt</p>
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={150}
+                className="border-2 border-slate-200 rounded-xl w-full touch-none"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              <div className="flex gap-2 mt-4">
+                <button onClick={() => setShowSignaturePad(false)} className="flex-1 py-3 bg-slate-200 rounded-xl font-bold">Annuler</button>
+                <button onClick={confirmSignature} className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold">Valider</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="p-6 border-t border-slate-100 bg-white sticky bottom-0">

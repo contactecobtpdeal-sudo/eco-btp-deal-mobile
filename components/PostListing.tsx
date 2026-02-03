@@ -23,14 +23,16 @@ const PostListing: React.FC<PostListingProps> = ({ onPost, onCancel }) => {
     logistics: 'voiture' as 'voiture' | 'camionnette' | 'camion',
   });
 
-  const addPhoto = () => {
-    const mockImages = [
-      'https://images.unsplash.com/photo-1541888946425-d81bb19480c5?q=80&w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=800&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=800&auto=format&fit=crop'
-    ];
-    const nextPhoto = mockImages[formData.photos.length % mockImages.length];
-    setFormData({ ...formData, photos: [...formData.photos, nextPhoto] });
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setFormData({ ...formData, photos: [...formData.photos, base64] });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -101,13 +103,16 @@ const PostListing: React.FC<PostListingProps> = ({ onPost, onCancel }) => {
                 </div>
               ))}
               
-              <button 
-                onClick={addPhoto}
-                className="aspect-square rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-orange-500 hover:text-orange-500 transition-all"
-              >
+              <label className="aspect-square rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-orange-500 hover:text-orange-500 transition-all cursor-pointer">
                 <Plus size={20} />
                 <span className="text-[8px] font-black uppercase">Ajouter</span>
-              </button>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
             </div>
           </div>
 
